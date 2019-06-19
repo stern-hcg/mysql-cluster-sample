@@ -1,0 +1,88 @@
+version: '3.3'
+
+services:
+
+  ndbman:
+    container_name: management_1
+    image: "mysql/mysql-cluster"
+    entrypoint: /entrypoint.sh ndb_mgmd
+    ports:
+        - "3308:3306"
+    depends_on:
+      - data_node_1
+      - data_node_2
+      - mysqld_1
+      - mysqld_2
+    volumes:
+        - ./cnf/mysql-cluster.cnf:/etc/mysql-cluster.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=defaultpass
+    networks:
+      cluster:
+        ipv4_address: 192.168.0.2
+
+  data_node_1:
+    container_name: ndb_1
+    image: "mysql/mysql-cluster"
+    entrypoint: /entrypoint.sh ndbd
+    ports:
+            - "13306:3306"
+    volumes:
+       - ./cnf/mysql-cluster.cnf:/etc/mysql-cluster.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=defaultpass
+    networks:
+      cluster:
+        ipv4_address: 192.168.0.3
+
+  data_node_2:
+    container_name: ndb_2
+    image: "mysql/mysql-cluster"
+    entrypoint: /entrypoint.sh ndbd
+    ports:
+            - "13307:3306"
+    volumes:
+       - ./cnf/mysql-cluster.cnf:/etc/mysql-cluster.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=defaultpass
+    networks:
+      cluster:
+        ipv4_address: 192.168.0.4
+
+
+  mysqld_1:
+    container_name: mysql_1
+    image: "mysql/mysql-cluster"
+    entrypoint: /entrypoint.sh mysqld
+    ports:
+      - "3306:3306"
+    volumes:
+       - ./cnf/mysql-cluster.cnf:/etc/mysql-cluster.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=defaultpass
+    networks:
+      cluster:
+        ipv4_address: 192.168.0.10
+
+  mysqld_2:
+      container_name: mysql_2
+      image: "mysql/mysql-cluster"
+      entrypoint: /entrypoint.sh mysqld
+      ports:
+        - "23306:3306"
+      volumes:
+         - ./cnf/mysql-cluster.cnf:/etc/mysql-cluster.cnf
+      environment:
+        - MYSQL_ROOT_PASSWORD=defaultpass
+      networks:
+        cluster:
+          ipv4_address: 192.168.0.11
+
+networks:
+  cluster:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 192.168.0.0/16
